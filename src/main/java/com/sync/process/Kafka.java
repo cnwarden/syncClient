@@ -1,11 +1,13 @@
 package com.sync.process;
 
 import java.net.InetSocketAddress;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
+import java.util.Date;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -138,17 +140,23 @@ public class Kafka implements Runnable {
 					data.put("after", makeColumn(rowData.getAfterColumnsList()));
 				}
 				String text = JSON.toJSONString(data);
-				try {
-					metadata = producer.send(new ProducerRecord<>(topic, no, text)).get();
-					if (metadata == null) {
+				if (eventType == EventType.INSERT || eventType == EventType.UPDATE) {
+					try {
+						metadata = producer.send(new ProducerRecord<>(topic, no, text)).get();
+						if (metadata == null) {
+							ret = false;
+						}
+						if (GetProperties.system_debug > 0) {
+						    Map<String, Object> subdata = (Map<String, Object>)data.get("after");
+						    Long updated_at = Long.parseLong(subdata.get("f_updated_at").toString());
+                            SimpleDateFormat format = new SimpleDateFormat("yyyy-M-d H:m:s.S");
+                            String y = format.format(new Date(updated_at));
+							WriteLog.write(canal_destination + ".access", "[msg]:" + y + " " + thread_name + "data(" + topic + "," + no + ", " + text + ")" + "updated:" + updated_at.toString());
+						}
+					} catch (InterruptedException | ExecutionException e) {
+						WriteLog.write(canal_destination + ".error", thread_name + "kafka link failure!" + WriteLog.eString(e));
 						ret = false;
 					}
-					if (GetProperties.system_debug > 0) {
-						WriteLog.write(canal_destination + ".access", thread_name + "data(" + topic + "," + no + ", " + text + ")");
-					}
-				} catch (InterruptedException | ExecutionException e) {
-					WriteLog.write(canal_destination + ".error", thread_name + "kafka link failure!"+ WriteLog.eString(e));
-					ret = false;
 				}
 			}
 			data.clear();
