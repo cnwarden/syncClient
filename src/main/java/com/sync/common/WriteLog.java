@@ -26,7 +26,7 @@ public class WriteLog {
 			base = System.getProperty("user.dir");
 		}
 
-		String current = base + "/logs/";
+		String current = base + "/log/";
 		try {
 			String logFilePathName = null;
 			Calendar cd = Calendar.getInstance();

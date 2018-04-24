@@ -14,7 +14,6 @@
     </properties>
 
     <dependencies>
-        <!-- https://mvnrepository.com/artifact/com.alibaba.otter/canal.common -->
         <dependency>
             <groupId>com.alibaba.otter</groupId>
             <artifactId>canal.common</artifactId>
@@ -114,7 +113,7 @@
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>3.0.2</version>
                 <configuration>
-                    <outputDirectory>output</outputDirectory>
+                    <outputDirectory>lib</outputDirectory>
                     <archive>
                         <manifest>
                             <mainClass>com.sync.process.task</mainClass>
@@ -141,6 +140,25 @@
                         <phase>deploy</phase>
                         <goals>
                             <goal>deploy</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptors>
+                        <descriptor>${basedir}/src/main/assembly/release.xml</descriptor>
+                    </descriptors>
+                    <finalName>syncclient-${project.version}</finalName>
+                    <outputDirectory>${basedir}</outputDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-dist</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
                         </goals>
                     </execution>
                 </executions>

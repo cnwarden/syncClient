@@ -14,7 +14,7 @@ import java.util.Properties;
  * @version 1.0.0
  */
 public class ReadProperties {
-	static final String propertiesFilename = "SysConfig.properties";
+	static final String propertiesFilename = "conf/conf.properties";
 	Properties p = new Properties();
 
 	public Properties readProperties() {

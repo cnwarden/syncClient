@@ -10,6 +10,7 @@ public final class TargetData {
 	public String type = "";
 	public String ip = "";
 	public int port = 0;
+	public String timetrackerTopic = "";
 
 	/**
 	 * @return the type
@@ -54,5 +55,13 @@ public final class TargetData {
 	 */
 	public void setPort(int port) {
 		this.port = port;
+	}
+
+
+	public String getTimeTrackerTopic() {
+		return timetrackerTopic;
+	}
+	public void setTimeTrackerTopic(String timeTrackerTopic) {
+		this.timetrackerTopic = timeTrackerTopic;
 	}
 }

@@ -75,6 +75,10 @@ public class GetProperties {
 					if (!"".equals(tmp)) {
 						target_tmp.setPort(Integer.parseInt(tmp));
 					}
+					tmp = String.valueOf(p.get(canal.destination[i] + ".timetracker.topic"));
+					if (!"".equals(tmp)) {
+						target_tmp.setTimeTrackerTopic(tmp);
+					}
 					target.put(canal.destination[i], target_tmp);
 				}
 			}

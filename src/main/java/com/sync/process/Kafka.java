@@ -50,20 +50,17 @@ public class Kafka implements Runnable {
 
 	public void process() throws IOException {
         Properties props = new Properties();
-		props.put("bootstrap.servers", GetProperties.target.get(canal_destination).ip + ":" + GetProperties.target.get(canal_destination).port);
+        String kafkaServer = GetProperties.target.get(canal_destination).ip + ":" + GetProperties.target.get(canal_destination).port;
+        String kafkaTopic = GetProperties.target.get(canal_destination).timetrackerTopic;
+		props.put("bootstrap.servers", kafkaServer);
 		props.put("client.id", canal_destination + "_Producer");
 		props.put("key.serializer", "org.apache.kafka.common.serialization.IntegerSerializer");
 		props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 
-        reporter = new KafkaAuditReporter("sync_bitexprodb_t_match_result",
-                "AMA",
-                "SyncClient",
-                "172.25.0.85:9092",
-                "1",
-                null);
-        tracker = new MessageTracker("sync_bitexprodb_t_match_result", reporter, 1, 1000000000,  1);
+//        reporter = new KafkaAuditReporter(kafkaTopic, "AMA", "SyncClient"+System.currentTimeMillis(), kafkaServer, "1", null);
+//        tracker = new MessageTracker(kafkaTopic, reporter, 1, 1000000000,  1);
 
-        int batchSize = 1000;
+        int batchSize = 2000;
 		connector = CanalConnectors.newSingleConnector(
 				new InetSocketAddress(GetProperties.canal.ip, GetProperties.canal.port), canal_destination,
 				GetProperties.canal.username, GetProperties.canal.password);
@@ -161,13 +158,7 @@ public class Kafka implements Runnable {
 							ret = false;
 						}
 						if (GetProperties.system_debug > 0) {
-						    Map<String, Object> subdata = (Map<String, Object>)data.get("after");
-						    Long updated_at = Long.parseLong(subdata.get("f_updated_at").toString());
-
-                            tracker.track((long)(System.currentTimeMillis()/1000), 1, System.currentTimeMillis() - updated_at);
-                            SimpleDateFormat format = new SimpleDateFormat("yyyy-M-d H:m:s.S");
-                            String y = format.format(new Date(updated_at));
-							WriteLog.write(canal_destination + ".access", "[msg]:" + y + " " + thread_name + "data(" + topic + "," + no + ", " + text + ")" + " updated:" + updated_at.toString());
+							WriteLog.write(canal_destination + ".access", thread_name + "data(" + topic + "," + no + ", " + text + ")");
 						}
 					} catch (InterruptedException | ExecutionException e) {
 						WriteLog.write(canal_destination + ".error", thread_name + "kafka link failure!" + WriteLog.eString(e));
