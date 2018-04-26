@@ -17,7 +17,7 @@
             <directory>./bin</directory>
             <outputDirectory>bin</outputDirectory>
             <includes>
-                <include>startup.sh</include>
+                <include>**/*</include>
             </includes>
             <fileMode>0755</fileMode>
         </fileSet>

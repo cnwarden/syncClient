@@ -9,8 +9,12 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.Date;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.huobi.tracker.client.KafkaAuditReporter;
+import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -60,7 +64,7 @@ public class Kafka implements Runnable {
 //        reporter = new KafkaAuditReporter(kafkaTopic, "AMA", "SyncClient"+System.currentTimeMillis(), kafkaServer, "1", null);
 //        tracker = new MessageTracker(kafkaTopic, reporter, 1, 1000000000,  1);
 
-        int batchSize = 2000;
+        int batchSize = 5000;
 		connector = CanalConnectors.newSingleConnector(
 				new InetSocketAddress(GetProperties.canal.ip, GetProperties.canal.port), canal_destination,
 				GetProperties.canal.username, GetProperties.canal.password);
@@ -152,18 +156,18 @@ public class Kafka implements Runnable {
 				}
 				String text = JSON.toJSONString(data);
 				if (eventType == EventType.INSERT || eventType == EventType.UPDATE) {
-					try {
-						metadata = producer.send(new ProducerRecord<>(topic, no, text)).get();
-						if (metadata == null) {
-							ret = false;
-						}
-						if (GetProperties.system_debug > 0) {
-							WriteLog.write(canal_destination + ".access", thread_name + "data(" + topic + "," + no + ", " + text + ")");
-						}
-					} catch (InterruptedException | ExecutionException e) {
-						WriteLog.write(canal_destination + ".error", thread_name + "kafka link failure!" + WriteLog.eString(e));
-						ret = false;
-					}
+						producer.send(new ProducerRecord<>(topic, no, text), new Callback() {
+							@Override
+							public void onCompletion(RecordMetadata metadata, Exception e) {
+								if (e != null) {
+									WriteLog.write("Could not send message over Kafka for topic {}", e.toString());
+								} else {
+									if (GetProperties.system_debug > 0) {
+										WriteLog.write(canal_destination + ".access", thread_name + "data(" + text + ")");
+									}
+								}
+							}
+						});
 				}
 			}
 			data.clear();
